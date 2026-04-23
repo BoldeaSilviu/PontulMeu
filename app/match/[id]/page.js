@@ -146,22 +146,18 @@ export default function MatchPage() {
     async function load() {
       setLoadingMatch(true); setError("");
       try {
-        const today = new Date();
-        const fromD = new Date(today); fromD.setDate(fromD.getDate() - 30);
-        const toD = new Date(today); toD.setDate(toD.getDate() + 30);
-        const res = await fetch(`/api/matches?competition=${competition}&dateFrom=${fromD.toISOString().split("T")[0]}&dateTo=${toD.toISOString().split("T")[0]}`);
+        const res = await fetch(`/api/match/${matchId}`);
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Eroare");
-        const m = (data.matches || []).find((x) => String(x.id) === String(matchId));
-        if (!m) throw new Error("Meciul nu a fost găsit. Poate data este prea veche sau prea nouă.");
-        setMatch(m);
+        if (!res.ok) throw new Error(data.error || "Meciul nu a fost găsit");
+        if (!data.match) throw new Error("Meciul nu a fost găsit");
+        setMatch(data.match);
       } catch (e) {
         setError(e.message);
       }
       setLoadingMatch(false);
     }
-    if (matchId && competition) load();
-  }, [matchId, competition]);
+    if (matchId) load();
+  }, [matchId]);
 
   async function runAnalysis() {
     if (!user) {
