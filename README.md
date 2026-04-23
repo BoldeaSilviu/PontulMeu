@@ -205,3 +205,4 @@ Pentru a fi profitabil: **minim 2-3 abonați plătitori**.
 
 - Email: contact@pontul-meu.vercel.app
 - Operat de: **PDF 33 LLC**
+ 
