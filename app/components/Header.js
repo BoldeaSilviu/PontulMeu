@@ -2,66 +2,58 @@
 import Link from "next/link";
 import { useAuth } from "./AuthProvider";
 
-export default function Header({ back }) {
-  const { user } = useAuth();
+export default function Header() {
+  const { user, logout } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const isPremium = isAdmin ||
+    (user?.plan === "premium" && user?.subscription_status === "active") ||
+    (user?.trial_end_date && new Date(user.trial_end_date) > new Date());
 
   return (
-    <div style={{
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "18px 16px 24px", gap: 12, position: "relative"
+    <header style={{
+      position: "sticky", top: 0, zIndex: 50,
+      background: "rgba(11,18,14,0.85)", backdropFilter: "blur(14px)",
+      borderBottom: "1px solid var(--border)"
     }}>
-      {back && (
-        <Link href={back} style={{
-          position: "absolute", left: 16, top: "50%", transform: "translateY(-30%)",
-          background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 9, padding: "8px 12px", fontSize: 13, color: "rgba(255,255,255,0.7)",
-          display: "flex", alignItems: "center", gap: 4, zIndex: 2
-        }}>
-          ←
+      <div style={{
+        maxWidth: 1180, margin: "0 auto", padding: "14px 16px",
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12
+      }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 21, fontWeight: 800, letterSpacing: -0.3 }}>
+            Cota<span style={{ color: "var(--green)" }}>Verde</span>
+          </span>
+          <span className="cv-pulse" style={{ marginTop: 2 }} />
         </Link>
-      )}
 
-      <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ fontSize: 32 }}>⚽</span>
-        <div>
-          <div style={{
-            fontSize: "clamp(20px,4vw,30px)", fontWeight: 900, letterSpacing: -1,
-            background: "linear-gradient(135deg,#10b981,#6ee7b7)",
-            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", lineHeight: 1
-          }}>
-            Pontul Meu
-          </div>
-          <div style={{ color: "rgba(255,255,255,.3)", fontSize: 10, letterSpacing: 3, textTransform: "uppercase", marginTop: 2 }}>
-            Analize Fotbal AI
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {user ? (
+            <>
+              {isAdmin && (
+                <Link href="/admin" className="cv-badge cv-badge-red" style={{ textDecoration: "none" }}>
+                  ADMIN
+                </Link>
+              )}
+              {isPremium ? (
+                <span className="cv-badge cv-badge-gold">PRO</span>
+              ) : (
+                <Link href="/upgrade" className="cv-badge cv-badge-gold-outline">UPGRADE</Link>
+              )}
+              <Link href="/dashboard" className="cv-btn-ghost cv-btn-sm" style={{ display: "inline-flex" }}>
+                {user.first_name || user.name?.split(" ")[0] || "Contul meu"}
+              </Link>
+              <button onClick={logout} className="cv-btn-ghost cv-btn-sm" title="Deconectare">
+                Ieși
+              </button>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="cv-btn-ghost cv-btn-sm" style={{ display: "inline-flex" }}>Intră în cont</Link>
+              <Link href="/register" className="cv-btn cv-btn-sm" style={{ display: "inline-flex" }}>Cont nou</Link>
+            </>
+          )}
         </div>
-      </Link>
-
-      {/* User badge - right side */}
-      <div style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-30%)" }}>
-        {user ? (
-          <Link href="/dashboard" style={{
-            background: user.isPremium
-              ? "linear-gradient(135deg,#fbbf24,#f59e0b)"
-              : "rgba(16,185,129,0.1)",
-            border: user.isPremium ? "none" : "1px solid rgba(16,185,129,0.3)",
-            borderRadius: 99, padding: "6px 12px", fontSize: 12, fontWeight: 700,
-            color: user.isPremium ? "#1a1a1a" : "#6ee7b7",
-            display: "inline-flex", alignItems: "center", gap: 5
-          }}>
-            {user.isPremium ? "💎" : "👤"} {user.name?.split(" ")[0] || "Cont"}
-          </Link>
-        ) : (
-          <Link href="/login" style={{
-            background: "rgba(16,185,129,0.1)",
-            border: "1px solid rgba(16,185,129,0.3)",
-            borderRadius: 9, padding: "7px 12px", fontSize: 12, fontWeight: 600,
-            color: "#6ee7b7"
-          }}>
-            Autentificare
-          </Link>
-        )}
       </div>
-    </div>
+    </header>
   );
 }

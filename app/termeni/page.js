@@ -2,7 +2,7 @@ import Header from "../components/Header";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Termeni și Condiții - Pontul Meu",
+  title: "Termeni și Condiții - CotaVerde",
 };
 
 export default function TermeniPage() {
@@ -22,16 +22,16 @@ export default function TermeniPage() {
           Actualizat: Aprilie 2026
         </p>
 
-        <h2 style={style.h2}>1. Despre Pontul Meu</h2>
+        <h2 style={style.h2}>1. Despre CotaVerde</h2>
         <p style={style.p}>
-          Pontul Meu (denumit în continuare „Aplicația") este o platformă informativă operată de
-          <strong> PDF 33 LLC</strong>, care oferă analize sportive generate de inteligență artificială
-          (Claude AI de la Anthropic) pentru meciurile de fotbal.
+          CotaVerde (denumit în continuare „Aplicația") este o platformă informativă operată de
+          <strong> PDF 33 LLC</strong>, care oferă analize sportive automate, fundamentate pe date statistice reale
+          pentru meciurile de fotbal.
         </p>
 
         <h2 style={style.h2}>2. Scopul informativ</h2>
         <p style={style.p}>
-          <strong>Pontul Meu NU este o platformă de jocuri de noroc.</strong> Toate analizele, pronosticurile,
+          <strong>CotaVerde NU este o platformă de jocuri de noroc.</strong> Toate analizele, pronosticurile,
           procentajele și recomandările prezentate sunt strict <strong>informative și educaționale</strong>.
           Utilizatorul își asumă întreaga responsabilitate pentru deciziile de pariere, aplicația nu garantează
           niciun rezultat.
@@ -94,7 +94,7 @@ export default function TermeniPage() {
         </div>
 
         <div style={{ textAlign: "center", marginTop: 30, color: "rgba(255,255,255,0.2)", fontSize: 11 }}>
-          Pontul Meu 2026 · Operat de PDF 33 LLC
+          CotaVerde 2026 · Operat de PDF 33 LLC
         </div>
       </div>
     </div>

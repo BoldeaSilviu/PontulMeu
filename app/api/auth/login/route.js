@@ -22,6 +22,12 @@ export async function POST(request) {
       return NextResponse.json({ error: "Email sau parolă incorecte" }, { status: 401 });
     }
 
+    if (user.blocked) {
+      return NextResponse.json({
+        error: "Contul tău a fost suspendat. Contactează-ne dacă e o greșeală."
+      }, { status: 403 });
+    }
+
     const token = createToken(user.id);
     setAuthCookie(token);
 

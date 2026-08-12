@@ -1,223 +1,126 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuth } from "../components/AuthProvider";
 import Header from "../components/Header";
+import { useAuth } from "../components/AuthProvider";
+
+const FEATURES = [
+  "Analize nelimitate, pe orice meci din 14 competiții",
+  "Biletul Verde: pariurile cu valoare matematică reală",
+  "Analiza piață cu piață contra cotelor caselor",
+  "Capcanele meciului: pariurile de evitat",
+  "Miză recomandată în unități, pentru bankroll sănătos",
+  "Formă reală din xG, șuturi și posesie, nu doar scoruri",
+];
 
 export default function UpgradePage() {
-  const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
   async function subscribe(plan) {
-    if (!user) {
-      router.push("/register?upgrade=1");
-      return;
-    }
-    setLoading(true); setError("");
+    setLoading(true);
+    setNotice("");
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan })
+        body: JSON.stringify({ plan }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Eroare");
-      } else if (data.url) {
+      if (res.ok && data.url) {
         window.location.href = data.url;
+        return;
       }
-    } catch (err) {
-      setError(err.message);
+      setNotice("Plata online se activează în curând. Scrie-ne și îți activăm manual abonamentul.");
+    } catch {
+      setNotice("Plata online se activează în curând. Scrie-ne și îți activăm manual abonamentul.");
     }
     setLoading(false);
   }
 
-  const features = [
-    { icon: "♾️", text: "Analize nelimitate (vs. 1/zi gratuit)" },
-    { icon: "💎", text: "Cele Mai Bune Pariuri (Value Bets)" },
-    { icon: "📊", text: "Toate piețele: Peste/Sub, BTTS, Cornere, Cartonașe" },
-    { icon: "⚔️", text: "Confruntări Directe complete (H2H)" },
-    { icon: "⭐", text: "Pontul Zilei — cel mai bun pariu al zilei" },
-    { icon: "🏆", text: "Ponturi VIP (încredere peste 80%)" },
-    { icon: "🔔", text: "Notificări push pentru meciurile favorite" },
-    { icon: "📈", text: "Statistici xG (Expected Goals)" },
-    { icon: "🎯", text: "Pariuri combinate generate de AI" },
-    { icon: "💰", text: "Money Management + Kelly Criterion" },
-    { icon: "📱", text: "ROI Tracker personal" },
-    { icon: "🌍", text: "Ligi extinse: MLS, Argentina, Mexico, Liga 1 RO" },
-    { icon: "📧", text: "Newsletter zilnic + Analiza săptămânii" },
-    { icon: "💾", text: "Istoric nelimitat + Export PDF" },
-    { icon: "🎨", text: "Temă Gold exclusivă" },
-  ];
+  const already = user?.isPremium;
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg,#060c18 0%,#0a1628 50%,#07111e 100%)", color: "white", fontFamily: "Georgia,serif" }}>
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "20px 16px 60px" }}>
-        <Header back="/" />
-
-        {/* Hero */}
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>💎</div>
-          <h1 style={{ fontSize: "clamp(26px,5vw,36px)", fontWeight: 900, marginBottom: 10,
-            background: "linear-gradient(135deg,#fbbf24,#f59e0b)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
-          }}>
-            Pontul Meu Premium
+    <>
+      <Header />
+      <main className="cv-container" style={{ maxWidth: 780, paddingTop: 36 }}>
+        <div className="fade" style={{ textAlign: "center", marginBottom: 30 }}>
+          <span className="cv-badge cv-badge-gold" style={{ marginBottom: 14 }}>COTAVERDE PREMIUM</span>
+          <h1 style={{ fontSize: "clamp(24px,5vw,34px)", fontWeight: 800, margin: "14px 0 10px" }}>
+            Toate verdictele. <span style={{ color: "var(--green)" }}>Zero limite.</span>
           </h1>
-          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 15, maxWidth: 500, margin: "0 auto", lineHeight: 1.6 }}>
-            Deblochează întreaga putere a AI-ului. Analize nelimitate, Pontul Zilei, Value Bets și mult mai mult.
+          <p style={{ fontSize: 14.5, color: "var(--muted2)", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
+            Primele 7 zile sunt gratuite la orice cont nou. Apoi alegi planul care ți se potrivește.
           </p>
-          {user?.isPremium && (
-            <div style={{ marginTop: 20, padding: "12px 20px", background: "rgba(16,185,129,0.1)",
-              border: "1px solid rgba(16,185,129,0.3)", borderRadius: 10, display: "inline-block",
-              color: "#6ee7b7", fontSize: 13, fontWeight: 600 }}>
-              ✅ Ai deja acces Premium activ
-            </div>
-          )}
         </div>
 
-        {error && (
-          <div style={{ marginBottom: 20, padding: "12px 16px", background: "rgba(239,68,68,0.1)",
-            border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, color: "#fca5a5", fontSize: 13 }}>
-            ⚠️ {error}
+        {already && (
+          <div className="cv-success fade" style={{ textAlign: "center", marginBottom: 20 }}>
+            Ai deja acces Premium activ. Spor la analize!
           </div>
         )}
 
-        {/* Pricing */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(290px,1fr))", gap: 16, marginBottom: 36 }}>
+        {notice && (
+          <div className="cv-card fade" style={{ border: "1px solid rgba(232,179,59,0.4)", textAlign: "center", marginBottom: 20, fontSize: 13.5, color: "var(--gold)" }}>
+            {notice}
+          </div>
+        )}
 
+        <div className="cv-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 26 }}>
           {/* Monthly */}
-          <div style={{
-            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 18, padding: 28, position: "relative"
-          }}>
-            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>
-              LUNAR
+          <div className="cv-card" style={{ textAlign: "center", padding: 26 }}>
+            <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 600, marginBottom: 12 }}>LUNAR</div>
+            <div style={{ marginBottom: 4 }}>
+              <span className="mono" style={{ fontSize: 44, fontWeight: 800 }}>49</span>
+              <span style={{ fontSize: 16, color: "var(--muted)" }}> lei/lună</span>
             </div>
-            <div style={{ marginBottom: 8 }}>
-              <span style={{ fontSize: 48, fontWeight: 900 }}>$9.99</span>
-              <span style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", marginLeft: 8 }}>/lună</span>
-            </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 20 }}>
-              Anulează oricând
-            </div>
-            <button onClick={() => subscribe("monthly")} disabled={loading || user?.isPremium}
-              style={{
-                width: "100%", padding: 14, borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)",
-                background: "rgba(255,255,255,0.06)", color: "white", fontSize: 14, fontWeight: 700,
-                fontFamily: "Georgia,serif", cursor: (loading || user?.isPremium) ? "not-allowed" : "pointer",
-                opacity: user?.isPremium ? 0.5 : 1
-              }}>
-              {loading ? "Se încarcă..." : "Alege planul lunar"}
+            <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 20 }}>Anulezi oricând</div>
+            <button onClick={() => subscribe("monthly")} disabled={loading || already} className="cv-btn" style={{ width: "100%" }}>
+              {already ? "Deja abonat" : loading ? "Se încarcă..." : "Alege lunar"}
             </button>
           </div>
 
-          {/* Yearly - HIGHLIGHT */}
-          <div style={{
-            background: "linear-gradient(135deg, rgba(251,191,36,0.08), rgba(245,158,11,0.05))",
-            border: "2px solid rgba(251,191,36,0.4)",
-            borderRadius: 18, padding: 28, position: "relative",
-            boxShadow: "0 8px 28px rgba(251,191,36,0.15)"
-          }}>
-            <div style={{ position: "absolute", top: -12, right: 20,
-              background: "linear-gradient(135deg,#fbbf24,#f59e0b)", padding: "5px 14px",
-              borderRadius: 99, fontSize: 11, fontWeight: 800, letterSpacing: 1, color: "#1a1a1a" }}>
-              ECONOMIE 34%
+          {/* Yearly */}
+          <div className="cv-card" style={{ textAlign: "center", padding: 26, border: "1.5px solid var(--gold)", position: "relative" }}>
+            <span className="cv-badge cv-badge-gold" style={{ position: "absolute", top: -11, left: "50%", transform: "translateX(-50%)" }}>
+              ECONOMISEȘTI 20%
+            </span>
+            <div style={{ fontSize: 13, color: "var(--gold)", fontWeight: 600, marginBottom: 12 }}>ANUAL</div>
+            <div style={{ marginBottom: 4 }}>
+              <span className="mono" style={{ fontSize: 44, fontWeight: 800, color: "var(--gold)" }}>470</span>
+              <span style={{ fontSize: 16, color: "var(--muted)" }}> lei/an</span>
             </div>
-            <div style={{ fontSize: 14, color: "#fbbf24", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10, fontWeight: 700 }}>
-              ANUAL ⭐
-            </div>
-            <div style={{ marginBottom: 8 }}>
-              <span style={{ fontSize: 48, fontWeight: 900, color: "#fbbf24" }}>$79</span>
-              <span style={{ fontSize: 18, color: "rgba(255,255,255,0.5)", marginLeft: 8 }}>/an</span>
-            </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>
-              <span style={{ textDecoration: "line-through" }}>$119.88</span> → doar <strong style={{ color: "#fbbf24" }}>$6.58/lună</strong>
-            </div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 20 }}>
-              🎁 7 zile gratuit · Anulează oricând
-            </div>
-            <button onClick={() => subscribe("yearly")} disabled={loading || user?.isPremium}
-              style={{
-                width: "100%", padding: 14, borderRadius: 10, border: "none",
-                background: "linear-gradient(135deg,#fbbf24,#f59e0b)",
-                color: "#1a1a1a", fontSize: 14, fontWeight: 800,
-                fontFamily: "Georgia,serif", cursor: (loading || user?.isPremium) ? "not-allowed" : "pointer",
-                boxShadow: "0 4px 16px rgba(251,191,36,0.3)",
-                opacity: user?.isPremium ? 0.5 : 1
-              }}>
-              {loading ? "Se încarcă..." : user?.isPremium ? "Deja abonat" : "Abonează-te anual ⭐"}
+            <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 20 }}>Echivalent 39 lei/lună</div>
+            <button onClick={() => subscribe("yearly")} disabled={loading || already} className="cv-btn cv-btn-gold" style={{ width: "100%" }}>
+              {already ? "Deja abonat" : loading ? "Se încarcă..." : "Alege anual"}
             </button>
           </div>
         </div>
 
-        {/* Features */}
-        <div style={{
-          background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 16, padding: 24, marginBottom: 24
-        }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#6ee7b7", marginBottom: 18 }}>
-            🎁 Tot ce primești cu Premium:
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 10 }}>
-            {features.map((f, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px",
-                background: "rgba(255,255,255,0.02)", borderRadius: 8, fontSize: 13 }}>
-                <span style={{ fontSize: 16 }}>{f.icon}</span>
-                <span style={{ color: "rgba(255,255,255,0.8)" }}>{f.text}</span>
+        <div className="cv-card fade" style={{ marginBottom: 26 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 14 }}>Ce primești cu Premium</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {FEATURES.map((f, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 13.5, color: "var(--muted2)", lineHeight: 1.6 }}>
+                <span style={{ color: "var(--green)", fontWeight: 700, flexShrink: 0 }}>✓</span>
+                {f}
               </div>
             ))}
           </div>
         </div>
 
-        {/* Why Premium */}
-        <div style={{
-          background: "linear-gradient(135deg, rgba(99,102,241,0.05), rgba(16,185,129,0.05))",
-          border: "1px solid rgba(99,102,241,0.15)",
-          borderRadius: 16, padding: 24, marginBottom: 24
-        }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#a5b4fc", marginBottom: 14 }}>
-            💡 De ce Premium merită?
-          </div>
-          <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 13.5, lineHeight: 1.7, margin: 0 }}>
-            Un singur pont Value Bets câștigător pe lună <strong>acoperă costul abonamentului</strong>.
-            Un pariu de $50 la cota 1.85 îți aduce $42.5 profit. Sunt deja $32 profit net peste
-            abonamentul lunar. Dar cei mai mulți dintre utilizatori pariază mai mult, iar AI-ul
-            identifică zilnic 3-5 oportunități cu valoare matematică reală.
-          </p>
-        </div>
-
-        {/* Money back / Security */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 12, marginBottom: 24 }}>
-          {[
-            { icon: "🔒", t: "Plăți Securizate", s: "Procesate de Stripe (același ca Spotify, Netflix)" },
-            { icon: "🚫", t: "Anulare Oricând", s: "Din contul tău, fără condiții" },
-            { icon: "🎁", t: "7 Zile Gratuit", s: "Testezi Premium fără să plătești" },
-          ].map((x, i) => (
-            <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 12, padding: 16, textAlign: "center" }}>
-              <div style={{ fontSize: 28, marginBottom: 6 }}>{x.icon}</div>
-              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{x.t}</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.4 }}>{x.s}</div>
-            </div>
-          ))}
-        </div>
-
         {!user && (
-          <div style={{ textAlign: "center", padding: 16, background: "rgba(16,185,129,0.05)",
-            border: "1px solid rgba(16,185,129,0.2)", borderRadius: 12 }}>
-            <Link href="/register" style={{ color: "#6ee7b7", fontWeight: 700, fontSize: 14 }}>
-              📝 Creează cont gratuit întâi →
-            </Link>
+          <div style={{ textAlign: "center" }}>
+            <Link href="/register" className="cv-btn">Creează cont · 7 zile gratuit</Link>
           </div>
         )}
 
-        <div style={{ textAlign: "center", marginTop: 30, color: "rgba(255,255,255,0.2)", fontSize: 11 }}>
-          Pontul Meu 2026 · Operat de PDF 33 LLC
-        </div>
-      </div>
-    </div>
+        <p style={{ fontSize: 11.5, color: "var(--muted)", textAlign: "center", marginTop: 26, lineHeight: 1.7 }}>
+          Analizele CotaVerde sunt strict informative și nu constituie sfaturi financiare.
+          Pariurile implică riscuri reale. Joacă responsabil, 18+.
+        </p>
+      </main>
+    </>
   );
 }

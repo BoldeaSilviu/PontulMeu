@@ -2,7 +2,7 @@ import Header from "../components/Header";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Politica de Confidențialitate - Pontul Meu",
+  title: "Politica de Confidențialitate - CotaVerde",
 };
 
 export default function ConfidentialitatePage() {
@@ -24,16 +24,16 @@ export default function ConfidentialitatePage() {
 
         <h2 style={style.h2}>1. Operatorul de date</h2>
         <p style={style.p}>
-          <strong>PDF 33 LLC</strong> este operatorul datelor personale colectate prin Pontul Meu.
+          <strong>PDF 33 LLC</strong> este operatorul datelor personale colectate prin CotaVerde.
         </p>
 
         <h2 style={style.h2}>2. Ce date colectăm</h2>
         <ul style={{ paddingLeft: 20 }}>
-          <li style={style.li}><strong>Email și nume</strong> — pentru autentificare și comunicări</li>
-          <li style={style.li}><strong>Parolă</strong> — stocată criptat (bcrypt), nu poate fi citită</li>
-          <li style={style.li}><strong>Date plăți</strong> — procesate DIRECT de Stripe, noi nu stocăm carduri</li>
-          <li style={style.li}><strong>Istoric analize</strong> — meciurile pentru care ai cerut pronostic</li>
-          <li style={style.li}><strong>Echipe favorite</strong> — pentru funcții personalizate (opțional)</li>
+          <li style={style.li}><strong>Email și nume</strong>: pentru autentificare și comunicări</li>
+          <li style={style.li}><strong>Parolă</strong>: stocată criptat (bcrypt), nu poate fi citită</li>
+          <li style={style.li}><strong>Date plăți</strong>: procesate DIRECT de Stripe, noi nu stocăm carduri</li>
+          <li style={style.li}><strong>Istoric analize</strong>: meciurile pentru care ai cerut pronostic</li>
+          <li style={style.li}><strong>Echipe favorite</strong>: pentru funcții personalizate (opțional)</li>
         </ul>
 
         <h2 style={style.h2}>3. Cum folosim datele</h2>
@@ -47,10 +47,10 @@ export default function ConfidentialitatePage() {
 
         <h2 style={style.h2}>4. Cui transmitem datele</h2>
         <ul style={{ paddingLeft: 20 }}>
-          <li style={style.li}><strong>Stripe</strong> (procesare plăți) — SUA, conformă GDPR</li>
-          <li style={style.li}><strong>Anthropic</strong> (AI analize) — SUA, nu primește datele tale personale, doar numele echipelor</li>
-          <li style={style.li}><strong>Vercel</strong> (hosting) — SUA, conformă GDPR</li>
-          <li style={style.li}><strong>API-Football</strong> (date meciuri) — nu primește date utilizator</li>
+          <li style={style.li}><strong>Stripe</strong> (procesare plăți): SUA, conformă GDPR</li>
+          <li style={style.li}><strong>Furnizori de procesare a analizelor</strong>: SUA, nu primesc datele tale personale, doar numele echipelor</li>
+          <li style={style.li}><strong>Vercel</strong> (hosting): SUA, conformă GDPR</li>
+          <li style={style.li}><strong>API-Football</strong> (date meciuri): nu primește date utilizator</li>
         </ul>
         <p style={style.p}>
           <strong>NU vindem date către terți</strong> în scop de marketing.
@@ -64,11 +64,11 @@ export default function ConfidentialitatePage() {
 
         <h2 style={style.h2}>6. Drepturile tale (GDPR)</h2>
         <ul style={{ paddingLeft: 20 }}>
-          <li style={style.li}>📥 <strong>Acces</strong> — să vezi ce date avem despre tine</li>
-          <li style={style.li}>✏️ <strong>Rectificare</strong> — să corectezi date greșite</li>
-          <li style={style.li}>🗑️ <strong>Ștergere</strong> — să ceri ștergerea contului și datelor</li>
-          <li style={style.li}>📤 <strong>Portabilitate</strong> — să primești datele tale în format JSON</li>
-          <li style={style.li}>🚫 <strong>Opoziție</strong> — să refuzi prelucrări specifice</li>
+          <li style={style.li}>📥 <strong>Acces</strong>: să vezi ce date avem despre tine</li>
+          <li style={style.li}>✏️ <strong>Rectificare</strong>: să corectezi date greșite</li>
+          <li style={style.li}>🗑️ <strong>Ștergere</strong>: să ceri ștergerea contului și datelor</li>
+          <li style={style.li}>📤 <strong>Portabilitate</strong>: să primești datele tale în format JSON</li>
+          <li style={style.li}>🚫 <strong>Opoziție</strong>: să refuzi prelucrări specifice</li>
         </ul>
         <p style={style.p}>
           Trimite cerere la: <a href="mailto:contact@pontul-meu.vercel.app" style={{ color: "#6ee7b7" }}>contact@pontul-meu.vercel.app</a>
@@ -103,7 +103,7 @@ export default function ConfidentialitatePage() {
         </div>
 
         <div style={{ textAlign: "center", marginTop: 30, color: "rgba(255,255,255,0.2)", fontSize: 11 }}>
-          Pontul Meu 2026 · Operat de PDF 33 LLC
+          CotaVerde 2026 · Operat de PDF 33 LLC
         </div>
       </div>
     </div>

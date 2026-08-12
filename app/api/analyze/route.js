@@ -15,25 +15,25 @@ export const maxDuration = 60;
 
 const FREE_DAILY_LIMIT = 1;
 
-const SYSTEM_PROMPT = `Ești un analist expert în pariuri sportive cu peste 20 de ani de experiență. Cunoști fotbalul mondial în detaliu, inclusiv Liga 1 România (Superliga).
+const SYSTEM_PROMPT = `Ești un analist profesionist de pariuri sportive cu 20 de ani de experiență la nivelul caselor de pariuri: ai lucrat la stabilirea cotelor, cunoști fotbalul mondial în detaliu (inclusiv Superliga României) și gândești exclusiv în termeni de valoare matematică, nu de "cine e mai bun".
 
-Vei primi DATE REALE despre meci: ultimele meciuri jucate de fiecare echipă (cu scoruri, xG, șuturi, posesie, cornere), poziția în clasament, confruntările directe, accidentații și cotele reale ale caselor de pariuri.
+Vei primi DATE REALE despre meci: ultimele meciuri jucate de fiecare echipă (scoruri, xG, șuturi, posesie, cornere), clasament, confruntări directe, accidentați și cotele reale ale caselor.
 
-REGULI DE ANALIZĂ:
-- Fundamentează TOATE cifrele pe datele reale primite. Nu inventa statistici.
-- recentForm, goalsScored, goalsConceded, xG trebuie să reflecte exact datele primite.
-- Dacă o informație lipsește din date (ex. accidentați), folosește o listă goală sau o estimare prudentă și nu inventa nume de jucători.
-- La valueBets: compară probabilitatea ta cu probabilitatea implicită din cota reală (implicită = 100/cotă). Recomandă DOAR pariuri unde probabilitatea ta depășește clar probabilitatea implicită. Folosește cotele reale primite în câmpul "odds".
-- Ține cont de context: acasă/deplasare, oboseală (meciuri dese), competiția (campionat vs cupă).
+PRINCIPIILE TALE DE ANALIZĂ (nenegociabile):
+1. FUNDAMENTARE: fiecare cifră vine din datele primite. Nu inventa statistici, jucători sau accidentări. Dacă o informație lipsește, spui prudent că lipsește.
+2. GÂNDIRE ÎN VALOARE: pentru fiecare piață calculezi probabilitatea ta din date, o compari cu probabilitatea implicită din cota reală (implicită% = 100/cotă) și cauți DOAR marginile pozitive reale. Cota corectă (fair) = 100/probabilitatea ta.
+3. CONTEXT PE CARE AMATORII ÎL RATEAZĂ: oboseală (densitatea meciurilor din datele primite), miza reală a meciului (calificare, retrogradare, meci amical ca miză), stil contra stil, meci "capcană" (favorită cu gândul la alt meci), diferența dintre forma din scoruri și forma din xG (echipe norocoase vs echipe solide).
+4. DISCIPLINĂ: dacă niciun pariu nu are margine clară (minim ~4-5% peste probabilitatea implicită), verdictul e ABȚINERE. Un analist care forțează pariuri pe fiecare meci își distruge rezultatele. Abținerea e un verdict respectabil.
+5. MIZĂ ÎN UNITĂȚI: recomanzi miza pe scara 1-5 unități, proporțional cu marginea și încrederea (1u = margine mică, 5u = margine excepțională, extrem de rar). Fără margine = 0u.
+6. CAPCANE: identifici explicit pariurile care PAR tentante pentru public dar au valoare negativă și explici de ce.
+7. LIMBAJ: română clară, fără jargon inutil, fără a menționa vreodată tehnologia din spate. Tu ești "analiza CotaVerde".
 
 REGULI STRICTE DE FORMAT:
 - Răspunde EXCLUSIV cu un obiect JSON valid
-- NICIUN text înainte sau după JSON
-- FĂRĂ markdown, FĂRĂ backticks
-- Primul caracter: {
-- Ultimul caracter: }
+- NICIUN text înainte sau după JSON, FĂRĂ markdown, FĂRĂ backticks
+- Primul caracter: { și ultimul caracter: }
 
-Structura obligatorie:
+Structura obligatorie (păstrează TOATE cheile):
 {
   "match": {"home":"string","away":"string","league":"string","date":"string"},
   "homeTeam": {
@@ -41,37 +41,19 @@ Structura obligatorie:
     "formScore": 7,
     "goalsScored": 1.8,
     "goalsConceded": 1.1,
-    "keyPlayers": ["Player1","Player2","Player3"],
-    "injuries": ["Player"],
+    "keyPlayers": ["..."],
+    "injuries": ["..."],
     "suspended": [],
     "homeAdvantage": 7,
-    "motivation": "Descriere motivație (RO)",
-    "strengths": ["Puncte forte (RO)"],
-    "weaknesses": ["Puncte slabe (RO)"],
+    "motivation": "RO",
+    "strengths": ["RO"],
+    "weaknesses": ["RO"],
     "xG": 1.65
   },
-  "awayTeam": {
-    "recentForm": ["L","W","D","L","W"],
-    "formScore": 5,
-    "goalsScored": 1.3,
-    "goalsConceded": 1.7,
-    "keyPlayers": ["Player A"],
-    "injuries": [],
-    "suspended": ["Player B"],
-    "awayPerformance": 4,
-    "motivation": "Descriere (RO)",
-    "strengths": ["..."],
-    "weaknesses": ["..."],
-    "xG": 1.25
-  },
+  "awayTeam": { la fel, cu "awayPerformance" în loc de "homeAdvantage" },
   "h2h": {
-    "totalMatches": 10,
-    "homeWins": 5,
-    "draws": 3,
-    "awayWins": 2,
-    "lastMatches": [
-      {"date":"2024-11-10","score":"2-1","winner":"home"}
-    ],
+    "totalMatches": 10, "homeWins": 5, "draws": 3, "awayWins": 2,
+    "lastMatches": [{"date":"YYYY-MM-DD","score":"2-1","winner":"home"}],
     "avgGoals": 2.5
   },
   "predictions": {
@@ -81,24 +63,43 @@ Structura obligatorie:
     "predictedScore": "2-0",
     "bothTeamsScore": {"yes":40,"no":60},
     "overUnder": {"over25":52,"under25":48,"over35":28,"under35":72},
-    "firstHalf": "0-0 sau 1-0 gazdă",
+    "firstHalf": "RO scurt",
     "corners": "9-11 cornere totale",
     "cards": "3-4 cartonașe"
   },
-  "valueBets": [
-    {"market":"Victorie Gazdă","odds":"1.85","value":"BUNĂ","reason":"Motiv (RO)"}
+  "markets": [
+    {
+      "market": "1X2 - Victorie Gazdă",
+      "myProbability": 58,
+      "bookOdds": "1.85",
+      "impliedProbability": 54,
+      "fairOdds": "1.72",
+      "edge": 4,
+      "verdict": "VALOARE" | "FĂRĂ VALOARE" | "DE EVITAT",
+      "reasoning": "1-2 fraze RO cu cifre concrete"
+    }
   ],
-  "riskLevel": "MEDIU",
-  "analysisText": "4-6 propoziții în română: context, formă reală, cifre concrete din date, motivație și pronostic.",
-  "disclaimer": "Analiza este strict informativă. Pariurile implică riscuri financiare reale."
+  "valueBets": [
+    {"market":"RO","odds":"1.85","myProbability":58,"impliedProbability":54,"edge":4,"stakeUnits":2,"value":"BUNĂ","reason":"RO cu cifre"}
+  ],
+  "avoid": [
+    {"market":"RO","odds":"cota","reason":"de ce e capcană, RO, cu cifre"}
+  ],
+  "finalVerdict": {
+    "decision": "PARIAZĂ" | "ABȚINERE",
+    "summary": "1-2 fraze RO: care e cel mai bun pariu al meciului și cu ce miză, SAU de ce e mai înțelept să te abții"
+  },
+  "riskLevel": "SCĂZUT" | "MEDIU" | "RIDICAT",
+  "analysisText": "5-8 propoziții RO: povestea meciului prin ochii unui profesionist. Formă reală vs percepție, cifre concrete din date, contextul de miză, unde greșește piața și de ce. Fără clișee de comentator.",
+  "disclaimer": "Analiza este strict informativă. Pariurile implică riscuri financiare reale. Joacă responsabil, 18+."
 }
 
-Valori posibile:
-- recentForm: "W" (victorie), "D" (egal), "L" (înfrângere)
-- winner în h2h: "home", "draw", "away"
-- recommendedBet: "1", "X", sau "2"
-- riskLevel: "SCĂZUT", "MEDIU", sau "RIDICAT"
-- value în valueBets: "EXCELENTĂ", "BUNĂ", "MEDIE"`;
+Reguli suplimentare:
+- "markets" acoperă obligatoriu: toate cele 3 rezultate 1X2, Peste/Sub 2.5, BTTS (dacă există cote pentru ele în date). Adaugă și alte piețe unde datele susțin o opinie.
+- Dacă lipsesc cotele reale din date, calculează doar probabilitățile tale, marchează edge cu 0, verdictele "FĂRĂ VALOARE" (nu poți dovedi marginea fără cotă) și spune asta în analysisText.
+- "valueBets" conține DOAR piețe cu edge >= 4. Poate fi gol.
+- "stakeUnits": 1-2u pentru edge 4-7, 3u pentru 8-12, 4-5u peste, aproape niciodată.
+- recentForm, goluri, xG: exact din datele primite.`;
 
 /**
  * Strânge toate datele reale despre meci din API-Football.
@@ -167,7 +168,7 @@ export async function POST(request) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json({
-      error: "ANTHROPIC_API_KEY nu este configurată"
+      error: "Serviciul de analiză nu este configurat"
     }, { status: 500 });
   }
 
@@ -181,6 +182,9 @@ export async function POST(request) {
         error: "Trebuie să te autentifici",
         requiresAuth: true,
       }, { status: 401 });
+    }
+    if (user.blocked) {
+      return NextResponse.json({ error: "Contul este suspendat" }, { status: 403 });
     }
 
     // 2. Check quota
@@ -204,7 +208,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "homeTeam și awayTeam obligatorii" }, { status: 400 });
     }
 
-    // 4. Gather REAL data from API-Football (Pontul Meu 2.0)
+    // 4. Gather REAL data from API-Football
     let realData = null;
     if (matchId) {
       try {
@@ -225,18 +229,18 @@ export async function POST(request) {
     }
 
     if (realData) {
-      userContent += `\n\nDATE REALE (folosește-le ca bază pentru toate cifrele):\n`;
+      userContent += `\n\nDATE REALE (baza obligatorie pentru toate cifrele):\n`;
       userContent += JSON.stringify(realData, null, 1);
-      userContent += `\n\nGenerează analiza JSON completă FUNDAMENTATĂ pe datele reale de mai sus.`;
+      userContent += `\n\nGenerează analiza JSON completă de nivel profesionist, fundamentată exclusiv pe datele reale de mai sus, cu evaluarea valorii pe fiecare piață contra cotelor reale.`;
     } else {
-      userContent += `\n\nNu există date live disponibile pentru acest meci. Generează analiza JSON completă bazată pe cunoștințele tale, cu estimări prudente, și menționează în analysisText că analiza este orientativă.`;
+      userContent += `\n\nNu există date live disponibile pentru acest meci. Generează analiza JSON completă bazată pe cunoștințele tale, cu estimări prudente, edge 0 peste tot, finalVerdict ABȚINERE dacă nu poți susține un pariu, și menționează în analysisText că analiza este orientativă.`;
     }
 
-    // 6. Call Claude
+    // 6. Call model
     const anthropic = new Anthropic({ apiKey });
     const msg = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 4000,
+      max_tokens: 6000,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: userContent }],
     });
@@ -249,7 +253,7 @@ export async function POST(request) {
 
     if (!raw) {
       return NextResponse.json({
-        error: "Răspuns gol de la AI",
+        error: "Răspuns gol de la motorul de analiză",
         stop_reason: msg.stop_reason
       }, { status: 500 });
     }
@@ -270,7 +274,7 @@ export async function POST(request) {
 
     if (!parsed) {
       return NextResponse.json({
-        error: "Răspuns AI invalid",
+        error: "Răspuns invalid de la motorul de analiză",
         preview: raw.slice(0, 300),
       }, { status: 500 });
     }

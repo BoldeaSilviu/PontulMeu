@@ -2,91 +2,80 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../components/AuthProvider";
 import Header from "../components/Header";
+import { useAuth } from "../components/AuthProvider";
 
 export default function LoginPage() {
   const router = useRouter();
   const { refresh } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e) {
+  async function submit(e) {
     e.preventDefault();
-    setLoading(true); setError("");
+    setError("");
+    setLoading(true);
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Eroare la autentificare");
-      } else {
-        await refresh();
-        router.push("/");
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      setError(err.message);
+      if (refresh) await refresh();
+      router.push("/");
+    } catch {
+      setError("Eroare de rețea. Încearcă din nou.");
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg,#060c18 0%,#0a1628 50%,#07111e 100%)", color: "white", fontFamily: "Georgia,serif" }}>
-      <div style={{ maxWidth: 440, margin: "0 auto", padding: "20px 16px" }}>
-        <Header back="/" />
-        <form onSubmit={onSubmit} style={{
-          background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 16, padding: 28, marginTop: 20
-        }}>
-          <h2 style={{ fontSize: 22, fontWeight: 900, marginBottom: 6, color: "#6ee7b7" }}>Autentificare</h2>
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 22 }}>
-            Bine ai revenit! 👋
+    <>
+      <Header />
+      <main className="cv-container" style={{ maxWidth: 440, paddingTop: 48 }}>
+        <div className="fade" style={{ textAlign: "center", marginBottom: 26 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 800, marginBottom: 8 }}>
+            Bine ai revenit
+          </h1>
+          <p style={{ fontSize: 14, color: "var(--muted)" }}>
+            Intră în contul tău CotaVerde
           </p>
+        </div>
 
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.5)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-              style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "white",
-                fontSize: 14, fontFamily: "Georgia,serif", boxSizing: "border-box" }}
-            />
+        <form onSubmit={submit} className="cv-card fade" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <label className="cv-label">Email</label>
+            <input className="cv-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@exemplu.ro" required />
+          </div>
+          <div>
+            <label className="cv-label">Parolă</label>
+            <input className="cv-input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
           </div>
 
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.5)", letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 6 }}>Parolă</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
-              style={{ width: "100%", padding: "12px 14px", background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "white",
-                fontSize: 14, fontFamily: "Georgia,serif", boxSizing: "border-box" }}
-            />
-          </div>
+          {error && <div className="cv-error">{error}</div>}
 
-          {error && (
-            <div style={{ marginBottom: 14, padding: "10px 14px", background: "rgba(239,68,68,0.1)",
-              border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, color: "#fca5a5", fontSize: 12 }}>
-              ⚠️ {error}
-            </div>
-          )}
-
-          <button type="submit" disabled={loading} style={{
-            width: "100%", padding: 14, borderRadius: 10, border: "none", cursor: loading ? "not-allowed" : "pointer",
-            background: loading ? "rgba(16,185,129,0.3)" : "linear-gradient(135deg,#10b981,#059669)",
-            color: "white", fontSize: 15, fontWeight: 800, fontFamily: "Georgia,serif",
-            boxShadow: loading ? "none" : "0 4px 14px rgba(16,185,129,0.3)"
-          }}>
-            {loading ? "Se autentifică..." : "Autentifică-te"}
+          <button type="submit" className="cv-btn" disabled={loading}>
+            {loading ? "Se verifică..." : "Intră în cont"}
           </button>
 
-          <div style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-            Nu ai cont? <Link href="/register" style={{ color: "#6ee7b7", fontWeight: 600 }}>Creează acum</Link>
-          </div>
+          <p style={{ textAlign: "center", fontSize: 13 }}>
+            <Link href="/forgot-password" style={{ color: "var(--muted2)" }}>Am uitat parola</Link>
+          </p>
         </form>
-      </div>
-    </div>
+
+        <p style={{ textAlign: "center", marginTop: 20, fontSize: 14, color: "var(--muted)" }}>
+          Nu ai cont?{" "}
+          <Link href="/register" style={{ color: "var(--green)", fontWeight: 600 }}>Creează unul gratuit</Link>
+        </p>
+      </main>
+    </>
   );
 }
