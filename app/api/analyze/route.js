@@ -2,14 +2,31 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { initDatabase, countTodayAnalyses, isUserPremium, saveAnalysis } from "@/lib/db";
+import {
+  getFixtureById,
+  getTeamFormSummary,
+  getH2H,
+  getStandings,
+  getInjuries,
+  getOdds,
+} from "@/lib/api-football";
+
+export const maxDuration = 60;
 
 const FREE_DAILY_LIMIT = 1;
 
-const SYSTEM_PROMPT = `Ești un analist expert în pariuri sportive cu peste 20 de ani de experiență. Cunoști fotbalul mondial în detaliu: echipe, jucători, forme, statistici, stiluri de joc, inclusiv Liga 1 România (Superliga).
+const SYSTEM_PROMPT = `Ești un analist expert în pariuri sportive cu peste 20 de ani de experiență. Cunoști fotbalul mondial în detaliu, inclusiv Liga 1 România (Superliga).
 
-Când primești date despre un meci, generezi o analiză completă și realistă bazată pe cunoștințele tale.
+Vei primi DATE REALE despre meci: ultimele meciuri jucate de fiecare echipă (cu scoruri, xG, șuturi, posesie, cornere), poziția în clasament, confruntările directe, accidentații și cotele reale ale caselor de pariuri.
 
-Respectă REGULI STRICTE:
+REGULI DE ANALIZĂ:
+- Fundamentează TOATE cifrele pe datele reale primite. Nu inventa statistici.
+- recentForm, goalsScored, goalsConceded, xG trebuie să reflecte exact datele primite.
+- Dacă o informație lipsește din date (ex. accidentați), folosește o listă goală sau o estimare prudentă și nu inventa nume de jucători.
+- La valueBets: compară probabilitatea ta cu probabilitatea implicită din cota reală (implicită = 100/cotă). Recomandă DOAR pariuri unde probabilitatea ta depășește clar probabilitatea implicită. Folosește cotele reale primite în câmpul "odds".
+- Ține cont de context: acasă/deplasare, oboseală (meciuri dese), competiția (campionat vs cupă).
+
+REGULI STRICTE DE FORMAT:
 - Răspunde EXCLUSIV cu un obiect JSON valid
 - NICIUN text înainte sau după JSON
 - FĂRĂ markdown, FĂRĂ backticks
@@ -72,7 +89,7 @@ Structura obligatorie:
     {"market":"Victorie Gazdă","odds":"1.85","value":"BUNĂ","reason":"Motiv (RO)"}
   ],
   "riskLevel": "MEDIU",
-  "analysisText": "4 propoziții în română despre context, formă, motivație și pronostic.",
+  "analysisText": "4-6 propoziții în română: context, formă reală, cifre concrete din date, motivație și pronostic.",
   "disclaimer": "Analiza este strict informativă. Pariurile implică riscuri financiare reale."
 }
 
@@ -82,6 +99,69 @@ Valori posibile:
 - recommendedBet: "1", "X", sau "2"
 - riskLevel: "SCĂZUT", "MEDIU", sau "RIDICAT"
 - value în valueBets: "EXCELENTĂ", "BUNĂ", "MEDIE"`;
+
+/**
+ * Strânge toate datele reale despre meci din API-Football.
+ * Orice sursă care eșuează este ignorată (analiza merge mai departe
+ * cu datele disponibile).
+ */
+async function gatherRealData(matchId) {
+  const fixture = await getFixtureById(matchId);
+  if (!fixture) return null;
+
+  const homeId = fixture.homeTeam.id;
+  const awayId = fixture.awayTeam.id;
+
+  const [homeForm, awayForm, h2h, standings, injuries, odds] =
+    await Promise.allSettled([
+      getTeamFormSummary(homeId, fixture.homeTeam.name, { last: 5, withStats: 5 }),
+      getTeamFormSummary(awayId, fixture.awayTeam.name, { last: 5, withStats: 5 }),
+      getH2H(homeId, awayId, 8),
+      fixture.leagueId && fixture.season
+        ? getStandings(fixture.leagueId, fixture.season)
+        : Promise.resolve([]),
+      getInjuries(matchId),
+      getOdds(matchId),
+    ]);
+
+  const val = (r) => (r.status === "fulfilled" ? r.value : null);
+
+  const table = val(standings) || [];
+  const homeRank = table.find((t) => t.teamId === homeId) || null;
+  const awayRank = table.find((t) => t.teamId === awayId) || null;
+
+  const h2hList = val(h2h) || [];
+  const h2hCompact = h2hList.map((f) => ({
+    date: f.utcDate?.slice(0, 10),
+    match: `${f.homeTeam.name} ${f.score.home}-${f.score.away} ${f.awayTeam.name}`,
+  }));
+
+  const allInjuries = val(injuries) || [];
+
+  return {
+    fixture: {
+      home: fixture.homeTeam.name,
+      away: fixture.awayTeam.name,
+      league: fixture.competition,
+      round: fixture.stage,
+      date: fixture.utcDate,
+      venue: fixture.venue,
+      referee: fixture.referee,
+    },
+    homeForm: val(homeForm),
+    awayForm: val(awayForm),
+    standings: {
+      home: homeRank,
+      away: awayRank,
+    },
+    h2h: h2hCompact,
+    injuries: {
+      home: allInjuries.filter((i) => i.teamId === homeId),
+      away: allInjuries.filter((i) => i.teamId === awayId),
+    },
+    odds: val(odds),
+  };
+}
 
 export async function POST(request) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -124,7 +204,18 @@ export async function POST(request) {
       return NextResponse.json({ error: "homeTeam și awayTeam obligatorii" }, { status: 400 });
     }
 
-    // 4. Build prompt
+    // 4. Gather REAL data from API-Football (Pontul Meu 2.0)
+    let realData = null;
+    if (matchId) {
+      try {
+        realData = await gatherRealData(matchId);
+      } catch (dataErr) {
+        console.error("Real data gathering failed:", dataErr.message);
+        // non-fatal: fall back to knowledge-based analysis
+      }
+    }
+
+    // 5. Build prompt
     let userContent = `Analizează meciul: ${homeTeam} (gazdă) vs ${awayTeam} (oaspete)`;
     if (league) userContent += `\nCompetiție: ${league}`;
     if (date) userContent += `\nDată: ${date}`;
@@ -132,13 +223,20 @@ export async function POST(request) {
     if (score && (score.home !== null && score.home !== undefined)) {
       userContent += `\nScor final real: ${score.home}-${score.away}`;
     }
-    userContent += `\n\nGenerează analiza JSON completă bazată pe cunoștințele tale despre aceste echipe.`;
 
-    // 5. Call Claude
+    if (realData) {
+      userContent += `\n\nDATE REALE (folosește-le ca bază pentru toate cifrele):\n`;
+      userContent += JSON.stringify(realData, null, 1);
+      userContent += `\n\nGenerează analiza JSON completă FUNDAMENTATĂ pe datele reale de mai sus.`;
+    } else {
+      userContent += `\n\nNu există date live disponibile pentru acest meci. Generează analiza JSON completă bazată pe cunoștințele tale, cu estimări prudente, și menționează în analysisText că analiza este orientativă.`;
+    }
+
+    // 6. Call Claude
     const anthropic = new Anthropic({ apiKey });
     const msg = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
-      max_tokens: 3000,
+      model: "claude-sonnet-4-6",
+      max_tokens: 4000,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: userContent }],
     });
@@ -156,7 +254,7 @@ export async function POST(request) {
       }, { status: 500 });
     }
 
-    // 6. Parse JSON robustly
+    // 7. Parse JSON robustly
     let parsed = null;
     try { parsed = JSON.parse(raw); }
     catch {
@@ -177,7 +275,7 @@ export async function POST(request) {
       }, { status: 500 });
     }
 
-    // 7. Save to history
+    // 8. Save to history
     try {
       await saveAnalysis({
         userId: user.id,
@@ -192,11 +290,13 @@ export async function POST(request) {
       // non-fatal - return analysis anyway
     }
 
-    // 8. Build response with isPremium flag (frontend decides what to show)
+    // 9. Build response with isPremium flag (frontend decides what to show)
     return NextResponse.json({
       ...parsed,
+      _realData: realData,
       _meta: {
         isPremium,
+        dataGrounded: !!realData,
         quotaUsed: todayCount + 1,
         quotaLimit: isPremium ? null : FREE_DAILY_LIMIT,
       }
